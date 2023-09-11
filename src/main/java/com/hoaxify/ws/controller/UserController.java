@@ -1,19 +1,16 @@
 package com.hoaxify.ws.controller;
-
-
 import com.hoaxify.ws.error.ApiError;
-import com.hoaxify.ws.model.Users;
-import com.hoaxify.ws.repository.UserRepository;
+import com.hoaxify.ws.model.entity.Users;
 import com.hoaxify.ws.service.UserService;
 import com.hoaxify.ws.shared.GenericResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,15 +20,19 @@ public class UserController {
     UserService userService;
 
     @PostMapping("/api/1.0/users")
-    public ResponseEntity<?> createUser(@RequestBody Users users){
-        String username = users.getUsername();
-        if (username == null || username.isEmpty()){
-            ApiError error = new ApiError(400,"Validation Error", "/api/1.0/users");
-            Map<String, String> validationErrors = new HashMap<>();
-            validationErrors.put("username", "Username cannot be null");
-            error.setValidationErrors(validationErrors);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    public GenericResponse createUser(@Valid @RequestBody Users user){
+        userService.saveUser(user);
+        return new GenericResponse("user created");
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ApiError handleValidationException(MethodArgumentNotValidException exception){
+        ApiError error = new ApiError(400,"Validation Error", "/api/1.0/users");
+        Map<String, String> validationErrors = new HashMap<>();
+        for(FieldError fieldError : exception.getBindingResult().getFieldErrors()){
+            validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        return ResponseEntity.ok(new GenericResponse("user created"));
+        error.setValidationErrors(validationErrors);
+        return error;
     }
 }
