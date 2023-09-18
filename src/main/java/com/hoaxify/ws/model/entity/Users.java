@@ -13,9 +13,8 @@ public class Users {
     @Id
     @GeneratedValue
     private Long id;
-    @NotNull
-    @NotEmpty
-    @Size(min=4, max = 255)
+    @NotBlank(message = "{hoaxify.constraint.username.notblank}")
+    //@Size(min=4, max = 255)
     @UniqueUsername
     private String username;
     @NotNull
@@ -28,7 +27,6 @@ public class Users {
     private String email;
     @NotEmpty
     @NotNull
-    @Size
     @Size(min=4, max = 255)
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$")
     private String password;
